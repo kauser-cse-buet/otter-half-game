@@ -1,4 +1,4 @@
-pip install pygbag==0.7.2
+pip install pygbag==0.8
 
 
 rm -r build/
