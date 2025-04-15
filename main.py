@@ -24,6 +24,11 @@ def load_sprite(name, size=(80, 80)):
     img = pygame.image.load(path).convert_alpha()
     return pygame.transform.scale(img, size)
 
+def load_sound(sound_name):
+    sound_path = os.path.join("assets", sound_name)
+    return pygame.mixer.Sound(sound_path)
+
+
 sprites = {
     "happy": load_sprite("otter_happy.png"),
     "sleepy": load_sprite("otter_sleepy.png"),
@@ -40,9 +45,9 @@ sprites = {
 
 # Load sounds
 sounds = {
-    "happy": pygame.mixer.Sound("assets/sound_happy.wav"),
-    "hungry": pygame.mixer.Sound("assets/sound_hungry.wav"),
-    "sleepy": pygame.mixer.Sound("assets/sound_sleepy.wav"),
+    "happy": load_sound("sound_happy.wav"),
+    "hungry": load_sound("sound_hungry.wav"),
+    "sleepy": load_sound("sound_sleepy.wav")
 }
 
 # Game state
