@@ -1,4 +1,4 @@
-// otter_phaser_game.js
+// otter_phaser_game.js with sprite animations
 import * as Phaser from "https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.esm.min.js";
 
 const isMobile = window.innerWidth < 768;
@@ -22,9 +22,20 @@ export default class OtterGame extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image("happy", "assets/otter_happy.png");
-        this.load.image("sleepy", "assets/otter_sleepy.png");
-        this.load.image("hungry", "assets/otter_hungry.png");
+        // Load otter animation frames
+        this.load.image("otter_run_1", "assets/otter_run_1.png");
+        this.load.image("otter_run_2", "assets/otter_run_2.png");
+        this.load.image("otter_run_3", "assets/otter_run_3.png");
+
+        this.load.image("otter_idle_1", "assets/otter_idle_1.png");
+        this.load.image("otter_idle_2", "assets/otter_idle_2.png");
+        this.load.image("otter_idle_3", "assets/otter_idle_3.png");
+        this.load.image("otter_idle_4", "assets/otter_idle_4.png");
+
+        this.load.image("otter_sleep_1", "assets/otter_sleep_1.png");
+        this.load.image("otter_sleep_2", "assets/otter_sleep_2.png");
+        this.load.image("otter_sleep_3", "assets/otter_sleep_3.png");
+
         this.load.image("apple", "assets/apple.png");
         this.load.image("ball", "assets/ball.png");
         this.load.image("sparkle", "assets/sparkle.png");
@@ -32,17 +43,58 @@ export default class OtterGame extends Phaser.Scene {
         this.load.audio("sound_happy", "assets/sound_happy.ogg");
         this.load.audio("sound_hungry", "assets/sound_hungry.ogg");
         this.load.audio("sound_sleepy", "assets/sound_sleepy.ogg");
-
     }
 
     create() {
+        const scaleConfig = {
+            otter: isMobile ? 0.3: 0.6,
+            ball: isMobile ? 0.025: 0.05,
+            apple: isMobile ? 0.025: 0.05
+        };
+
+        
         let scoreTextColor = "#fff";
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
-        otter = this.add.sprite(centerX, centerY, state.mood).setScale(this.scale.width < 500 ? 0.25 : 0.3);
+        
+        
+        otter = this.add.sprite(centerX, centerY, "otter_idle_1").setScale(scaleConfig.otter);
+
+        this.anims.create({
+            key: "walk",
+            frames: [
+                { key: "otter_run_1" },
+                { key: "otter_run_2" },
+                { key: "otter_run_3" }
+            ],
+            frameRate: 6,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: "idle",
+            frames: [
+                { key: "otter_idle_1" },
+                { key: "otter_idle_2" },
+                { key: "otter_idle_3" },
+                { key: "otter_idle_4" }
+            ],
+            frameRate: 4,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: "sleep",
+            frames: [
+                { key: "otter_sleep_1" },
+                { key: "otter_sleep_2" },
+                { key: "otter_sleep_3" }
+            ],
+            frameRate: 3,
+            repeat: -1
+        });
 
         this.sparkle = this.add.particles(0, 0, 'sparkle', {
-            frame: null,                     // Only if using atlas
             quantity: 10,
             speed: { min: -40, max: 40 },
             angle: { min: 0, max: 360 },
@@ -64,25 +116,20 @@ export default class OtterGame extends Phaser.Scene {
 
         function createButton(scene, x, y, label, action) {
             const btn = scene.add.text(x, y, label, btnStyle)
-                .setInteractive({ useHandCursor: true }) // Show pointer
+                .setInteractive({ useHandCursor: true })
                 .on("pointerdown", () => {
-                    btn.setScale(0.95); // Press effect
+                    btn.setScale(0.95);
                     scene.time.delayedCall(100, () => {
-                        btn.setScale(1); // Reset scale
+                        btn.setScale(1);
                         action();
                     });
                 });
             return btn;
         }
-        
-        
-        
-
-
 
         appleGroup = this.add.group();
 
-        ball = this.add.sprite(700, bounceCenterY, "ball").setVisible(false).setScale(0.1);
+        ball = this.add.sprite(700, bounceCenterY, "ball").setVisible(false).setScale(scaleConfig.ball);
         ball.setInteractive();
 
         hungerText = this.add.text(20, 20, "Hunger: " + state.hunger, { fontSize: "20px", fill: scoreTextColor });
@@ -101,27 +148,20 @@ export default class OtterGame extends Phaser.Scene {
 
         this.lastMood = state.mood;
 
-
-
-        
-        
         const buttonX = this.scale.width - (isMobile ? 180 : 200);
         let buttonY = 20;
         const buttonGap = isMobile ? 70 : 75;
-        // const rightX = this.scale.width - 160;
 
         createButton(this, buttonX, buttonY, "🍎 Apple", () => {
             const x = otter.x + Phaser.Math.Between(-50, 50);
             const targetY = otter.y + Phaser.Math.Between(-30, 30);
-            const fallingApple = this.add.sprite(x, -50, "apple").setScale(0.15);
+            const fallingApple = this.add.sprite(x, -50, "apple").setScale(scaleConfig.apple);
             this.tweens.add({
                 targets: fallingApple,
                 y: targetY,
                 duration: 1000,
                 ease: 'Bounce.easeOut',
-                onComplete: () => {
-                    appleGroup.add(fallingApple);
-                }
+                onComplete: () => appleGroup.add(fallingApple)
             });
         });
         buttonY += buttonGap;
@@ -132,10 +172,9 @@ export default class OtterGame extends Phaser.Scene {
         });
         buttonY += buttonGap;
 
-        createButton(this, buttonX, buttonY, "🧼 Shower", () => {
+        createButton(this, buttonX, buttonY, "🧬 Shower", () => {
             state.mood = "happy";
             const sponge = this.add.text(otter.x - 40, otter.y, "🧽", { fontSize: "24px" });
-        
             this.tweens.add({
                 targets: sponge,
                 x: { getStart: () => otter.x - 40, getEnd: () => otter.x + 40 },
@@ -147,19 +186,16 @@ export default class OtterGame extends Phaser.Scene {
                 onUpdate: () => { sponge.y = otter.y; },
                 onComplete: () => {
                     sponge.destroy();
-        
-                    // 🎇 Sparkle particle explosion
                     this.sparkle.setPosition(otter.x, otter.y - 20);
-                    this.sparkle.explode();                    
+                    this.sparkle.explode();
                 }
             });
         });
         buttonY += buttonGap;
-        
-        createButton(this, buttonX, buttonY, "💤 Sleep", () => {
+
+        createButton(this, buttonX, buttonY, "🍌 Sleep", () => {
             state.energy = Math.min(100, state.energy + 40);
         });
-        buttonY += buttonGap;
     }
 
     update() {
@@ -180,7 +216,13 @@ export default class OtterGame extends Phaser.Scene {
             if (s) s.play();
         }
 
-        otter.setTexture(state.mood);
+        if (state.mood === "sleepy") {
+            otter.play("sleep", true);
+        } else if (state.mood === "hungry") {
+            otter.play("idle", true);
+        } else {
+            otter.play("walk", true);
+        }
 
         hungerText.setText("Hunger: " + Math.floor(state.hunger));
         energyText.setText("Energy: " + Math.floor(state.energy));
@@ -204,7 +246,7 @@ export default class OtterGame extends Phaser.Scene {
             if (ballPlayTimer <= 0) {
                 playingWithBall = false;
                 ball.setVisible(false);
-                ball.y = bounceCenterY; // Reset position
+                ball.y = bounceCenterY;
             }
             return;
         }
@@ -229,7 +271,6 @@ export default class OtterGame extends Phaser.Scene {
             let dy = target.y - otter.y;
             let dist = Math.sqrt(dx * dx + dy * dy);
 
-            // If close to apple, eat it
             if (appleGroup.contains(target) && dist < 10) {
                 state.hunger = Math.max(0, state.hunger - 30);
                 target.destroy();
