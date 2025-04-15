@@ -1,6 +1,7 @@
 // otter_phaser_game.js
 import * as Phaser from "https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.esm.min.js";
 
+
 let state = {
     hunger: 50,
     energy: 50,
@@ -35,7 +36,11 @@ export default class OtterGame extends Phaser.Scene {
 
     create() {
         let scoreTextColor = "#fff";
-        otter = this.add.sprite(400, 300, state.mood).setScale(0.3);
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
+        otter = this.add.sprite(centerX, centerY, state.mood).setScale(this.scale.width < 500 ? 0.25 : 0.3);
+
+
 
         appleGroup = this.add.group();
 
@@ -60,7 +65,8 @@ export default class OtterGame extends Phaser.Scene {
 
         const btnStyle = { fontSize: "18px", backgroundColor: "#eee", color: "#000", padding: 10 };
 
-        this.add.text(620, 20, "🍎 Apple", btnStyle).setInteractive().on("pointerdown", () => {
+        const rightX = this.scale.width - 160;
+        this.add.text(rightX, 20, "🍎 Apple", btnStyle).setInteractive().on("pointerdown", () => {
             const x = otter.x + Phaser.Math.Between(-50, 50);
             const targetY = otter.y + Phaser.Math.Between(-30, 30);
             const fallingApple = this.add.sprite(x, -50, "apple").setScale(0.15);
@@ -76,12 +82,12 @@ export default class OtterGame extends Phaser.Scene {
             });
         });
 
-        this.add.text(620, 60, "🥎 Ball", btnStyle).setInteractive().on("pointerdown", () => {
+        this.add.text(rightX, 60, "🥎 Ball", btnStyle).setInteractive().on("pointerdown", () => {
             ball.setVisible(true);
             ball.setPosition(Phaser.Math.Between(100, 700), bounceCenterY);
         });
 
-        this.add.text(620, 100, "🧼 Shower", btnStyle).setInteractive().on("pointerdown", () => {
+        this.add.text(rightX, 100, "🧼 Shower", btnStyle).setInteractive().on("pointerdown", () => {
             state.mood = "happy";
         
             // Create a sponge emoticon as a text object
@@ -103,7 +109,7 @@ export default class OtterGame extends Phaser.Scene {
         
         
 
-        this.add.text(620, 140, "💤 Sleep", btnStyle).setInteractive().on("pointerdown", () => {
+        this.add.text(rightX, 140, "💤 Sleep", btnStyle).setInteractive().on("pointerdown", () => {
             state.energy = Math.min(100, state.energy + 40);
         });
     }

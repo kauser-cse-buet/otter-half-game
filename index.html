@@ -4,24 +4,41 @@
   <meta charset="UTF-8" />
   <title>Otter Phaser Game</title>
   <style>
-    body { margin: 0; padding: 0; background: #f0f0f0; }
-    #game-container { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    #game-container {
+      width: 100vw;
+      height: 100vh;
+    }
   </style>
 </head>
 <body>
   <div id="game-container"></div>
+
 
   <!-- ✅ Phaser from CDN -->
   <script type="module">
     import * as Phaser from 'https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.esm.min.js';
     import OtterGame from './otter_phaser_game.js';
 
+
+        
+    const isMobile = window.innerWidth < 768;
+    const canvasWidth = isMobile ? window.innerWidth : 800;
+    const canvasHeight = isMobile ? window.innerHeight : 600;
+
     const config = {
       type: Phaser.AUTO,
-      width: 800,
-      height: 600,
-      parent: 'game-container',
-      scene: [OtterGame]
+      width: canvasWidth,
+      height: canvasHeight,
+      parent: "game-container", // optional div for placement
+      scene: OtterGame,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      }
     };
 
     new Phaser.Game(config);
