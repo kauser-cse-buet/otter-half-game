@@ -27,6 +27,7 @@ export default class OtterGame extends Phaser.Scene {
         this.load.image("hungry", "assets/otter_hungry.png");
         this.load.image("apple", "assets/apple.png");
         this.load.image("ball", "assets/ball.png");
+        this.load.image("sparkle", "assets/sparkle.png");
 
         this.load.audio("sound_happy", "assets/sound_happy.ogg");
         this.load.audio("sound_hungry", "assets/sound_hungry.ogg");
@@ -39,6 +40,19 @@ export default class OtterGame extends Phaser.Scene {
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
         otter = this.add.sprite(centerX, centerY, state.mood).setScale(this.scale.width < 500 ? 0.25 : 0.3);
+
+        this.sparkle = this.add.particles(0, 0, 'sparkle', {
+            frame: null,                     // Only if using atlas
+            quantity: 10,
+            speed: { min: -40, max: 40 },
+            angle: { min: 0, max: 360 },
+            lifespan: 700,
+            scale: { start: 0.4, end: 0 },
+            alpha: { start: 1, end: 0 },
+            emitting: false
+        });
+        
+        
 
 
 
@@ -87,26 +101,32 @@ export default class OtterGame extends Phaser.Scene {
             ball.setPosition(Phaser.Math.Between(100, 700), bounceCenterY);
         });
 
-        this.add.text(rightX, 100, "🧼 Shower", btnStyle).setInteractive().on("pointerdown", () => {
+        this.add.text(620, 100, "🧼 Shower", btnStyle).setInteractive().on("pointerdown", () => {
             state.mood = "happy";
         
-            // Create a sponge emoticon as a text object
-            const sponge = this.add.text(otter.x - 40, otter.y, "🧽", {
-                fontSize: "24px"
-            });
+            const sponge = this.add.text(otter.x - 40, otter.y, "🧽", { fontSize: "24px" });
         
-            // Tween it back and forth like rubbing
             this.tweens.add({
                 targets: sponge,
-                x: otter.x + 40,
+                x: { getStart: () => otter.x - 40, getEnd: () => otter.x + 40 },
+                y: { getStart: () => otter.y, getEnd: () => otter.y },
                 duration: 200,
-                ease: "Sine.easeInOut",
                 yoyo: true,
                 repeat: 4,
-                onComplete: () => sponge.destroy()
+                ease: 'Sine.easeInOut',
+                onUpdate: () => { sponge.y = otter.y; },
+                onComplete: () => {
+                    sponge.destroy();
+        
+                    // 🎇 Sparkle particle explosion
+                    this.sparkle.setPosition(otter.x, otter.y - 20);
+                    this.sparkle.explode();                    
+                }
             });
         });
         
+        
+                
         
 
         this.add.text(rightX, 140, "💤 Sleep", btnStyle).setInteractive().on("pointerdown", () => {
