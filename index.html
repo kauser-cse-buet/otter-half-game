@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Otter Phaser Game</title>
+  <style>
+    body { margin: 0; padding: 0; background: #f0f0f0; }
+    #game-container { width: 100vw; height: 100vh; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <!-- ✅ Phaser from CDN -->
+  <script type="module">
+    import * as Phaser from 'https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.esm.min.js';
+    import OtterGame from './otter_phaser_game.js';
+
+    const config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      parent: 'game-container',
+      scene: [OtterGame]
+    };
+
+    new Phaser.Game(config);
+  </script>
+</body>
+</html>
