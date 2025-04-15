@@ -1,8 +1,17 @@
+import asyncio
 import pygame
 import sys
 import os
 import random
 import math
+
+# /// script
+# dependencies = ["pygame-ce"]
+# ///
+
+if sys.platform == "emscripten":
+    import platform
+    platform.window.canvas.style.imageRendering = "pixelated"
 
 pygame.init()
 pygame.mixer.init()
@@ -24,10 +33,10 @@ def load_sprite(name, size=(80, 80)):
     img = pygame.image.load(path).convert_alpha()
     return pygame.transform.scale(img, size)
 
-def load_sound(sound_name):
-    sound_path = os.path.join("assets", sound_name)
-    return pygame.mixer.Sound(sound_path)
-
+def load_sound(name):
+    if sys.platform == "emscripten":
+        name = name.replace(".wav", ".ogg")
+    return pygame.mixer.Sound(os.path.join("assets", name))
 
 sprites = {
     "happy": load_sprite("otter_happy.png"),
@@ -43,23 +52,19 @@ sprites = {
     "giggle": [load_sprite(f"otter_giggle_{i}.png") for i in range(1, 4)]
 }
 
-# Load sounds
 sounds = {
     "happy": load_sound("sound_happy.wav"),
     "hungry": load_sound("sound_hungry.wav"),
     "sleepy": load_sound("sound_sleepy.wav")
 }
 
-# Game state
 state = {"hunger": 50, "energy": 50, "mood": "happy"}
-
 otter_pos = [300, 250]
 otter_target = otter_pos.copy()
 otter_speed = 2
 auto_wander_timer = 0
 sound_timer = 0
 
-# Menu and items
 context_icons = [
     ("Give Apple", "icon_apple"),
     ("Play Ball", "icon_ball"),
@@ -71,11 +76,8 @@ apple_pos = None
 ball_pos = None
 foam_particles = []
 dragging = False
-
-# Giggle animation
 giggle_mode = {"active": False, "frame": 0, "timer": 0}
 
-# Foam particle class
 class FoamParticle:
     def __init__(self, x, y):
         self.x = x
@@ -104,7 +106,6 @@ def update_emotion():
 
 def move_otter():
     global apple_pos, ball_pos, auto_wander_timer
-
     target = None
     if apple_pos:
         target = apple_pos
@@ -117,18 +118,14 @@ def move_otter():
             otter_target[0] = random.randint(50, WIDTH - 100)
             otter_target[1] = random.randint(50, HEIGHT - 100)
         target = otter_target
-
     if not target:
         return
-
     dx = target[0] - otter_pos[0]
     dy = target[1] - otter_pos[1]
     dist = math.hypot(dx, dy)
-
     if dist > 1:
         otter_pos[0] += otter_speed * dx / dist
         otter_pos[1] += otter_speed * dy / dist
-
     if apple_pos and dist < 20:
         apple_pos = None
         state["hunger"] = max(0, state["hunger"] - 30)
@@ -142,11 +139,9 @@ def draw_ui():
     screen.blit(font.render(f"Mood: {state['mood']}", True, BLACK), (20, 100))
 
 def draw_speech_bubble(text):
-    bubble_width = 160
-    bubble_height = 40
     bubble_x = otter_pos[0] + 40
     bubble_y = otter_pos[1] - 50
-    rect = pygame.Rect(bubble_x, bubble_y, bubble_width, bubble_height)
+    rect = pygame.Rect(bubble_x, bubble_y, 160, 40)
     pygame.draw.rect(screen, (255, 255, 255), rect, border_radius=10)
     pygame.draw.rect(screen, BLACK, rect, 2, border_radius=10)
     label = speech_font.render(text, True, BLACK)
@@ -158,86 +153,62 @@ def draw_scene():
         screen.blit(sprites["giggle"][frame], otter_pos)
     else:
         screen.blit(sprites[state["mood"]], otter_pos)
-
     if apple_pos:
         screen.blit(sprites["apple"], apple_pos)
     if ball_pos:
         screen.blit(sprites["ball"], ball_pos)
-
     for foam in foam_particles:
         foam.draw(screen)
 
 def draw_context_menu():
     if not context_menu["visible"]:
         return
-
     x, y = context_menu["x"], context_menu["y"]
-    icon_size = 50
-    spacing = 10
-
     for i, (_, icon_key) in enumerate(context_menu["icons"]):
-        rect = pygame.Rect(x, y + i * (icon_size + spacing), icon_size, icon_size)
+        rect = pygame.Rect(x, y + i * 60, 50, 50)
         pygame.draw.rect(screen, (240, 240, 240), rect)
         pygame.draw.rect(screen, BLACK, rect, 1)
         screen.blit(sprites[icon_key], rect)
 
 def get_icon_option_at_pos(pos):
     x, y = pos
-    menu_x, menu_y = context_menu["x"], context_menu["y"]
-    icon_size = 50
-    spacing = 10
-
+    mx, my = context_menu["x"], context_menu["y"]
     for i, (action, _) in enumerate(context_menu["icons"]):
-        rect = pygame.Rect(menu_x, menu_y + i * (icon_size + spacing), icon_size, icon_size)
+        rect = pygame.Rect(mx, my + i * 60, 50, 50)
         if rect.collidepoint(x, y):
             return action
     return None
 
-def game_loop():
+async def game_loop():
     global apple_pos, ball_pos, foam_particles, dragging, auto_wander_timer, sound_timer
-
     while True:
         screen.fill(WHITE)
         update_emotion()
         move_otter()
-
-        # Giggle animation
         if giggle_mode["active"]:
             giggle_mode["timer"] -= 1
             giggle_mode["frame"] += 1
             if giggle_mode["timer"] <= 0:
                 giggle_mode["active"] = False
-
-        # Foam animation
         foam_particles = [f for f in foam_particles if f.update()]
-
         draw_scene()
         draw_ui()
         draw_context_menu()
-
-        # 💬 Speech bubbles
         if state["mood"] == "hungry":
             draw_speech_bubble("I'm hungry!")
         elif state["mood"] == "sleepy":
             draw_speech_bubble("I'm sleepy...")
-
-        # 🔊 Random sounds
         sound_timer += 1
         if sound_timer > 300:
-            if state["mood"] == "happy":
-                sounds["happy"].play()
-            elif state["mood"] == "hungry":
-                sounds["hungry"].play()
-            elif state["mood"] == "sleepy":
-                sounds["sleepy"].play()
+            try:
+                sounds[state["mood"]].play()
+            except:
+                pass
             sound_timer = 0
-
-        # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 3:
                     context_menu["visible"] = True
@@ -258,10 +229,8 @@ def game_loop():
                             auto_wander_timer = 0
                     else:
                         otter_target[:] = list(event.pos)
-
             if event.type == pygame.MOUSEBUTTONUP:
                 dragging = False
-
             if event.type == pygame.MOUSEMOTION and dragging:
                 x, y = event.pos
                 foam_particles.append(FoamParticle(x, y))
@@ -271,15 +240,12 @@ def game_loop():
                     giggle_mode["active"] = True
                     giggle_mode["timer"] = 20
                     giggle_mode["frame"] = 0
-
-        # Passive state changes
         state["hunger"] += 0.02
         state["energy"] -= 0.01
-
         if state["mood"] == "happy" and auto_wander_timer <= 0:
             auto_wander_timer = 1
-
         pygame.display.update()
+        await asyncio.sleep(0)
         clock.tick(60)
 
-game_loop()
+asyncio.run(game_loop())
