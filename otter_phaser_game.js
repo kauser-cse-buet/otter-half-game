@@ -34,6 +34,7 @@ export default class OtterGame extends Phaser.Scene {
     }
 
     create() {
+        let scoreTextColor = "#fff";
         otter = this.add.sprite(400, 300, state.mood).setScale(0.3);
 
         appleGroup = this.add.group();
@@ -41,9 +42,9 @@ export default class OtterGame extends Phaser.Scene {
         ball = this.add.sprite(700, bounceCenterY, "ball").setVisible(false).setScale(0.1);
         ball.setInteractive();
 
-        hungerText = this.add.text(20, 20, "Hunger: " + state.hunger, { fontSize: "20px", fill: "#000" });
-        energyText = this.add.text(20, 50, "Energy: " + state.energy, { fontSize: "20px", fill: "#000" });
-        moodText = this.add.text(20, 80, "Mood: " + state.mood, { fontSize: "20px", fill: "#000" });
+        hungerText = this.add.text(20, 20, "Hunger: " + state.hunger, { fontSize: "20px", fill: scoreTextColor });
+        energyText = this.add.text(20, 50, "Energy: " + state.energy, { fontSize: "20px", fill: scoreTextColor });
+        moodText = this.add.text(20, 80, "Mood: " + state.mood, { fontSize: "20px", fill: scoreTextColor });
 
         speechBubble = this.add.text(0, 0, "", { fontSize: "16px", fill: "#000", backgroundColor: "#ffffff" });
         speechBubble.setPadding(10);
