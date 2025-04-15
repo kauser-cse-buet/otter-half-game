@@ -1,0 +1,1 @@
+pygbag --build main.py
