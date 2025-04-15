@@ -1,7 +1,7 @@
 // otter_phaser_game.js
 import * as Phaser from "https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.esm.min.js";
 
-
+const isMobile = window.innerWidth < 768;
 let state = {
     hunger: 50,
     energy: 50,
@@ -77,10 +77,21 @@ export default class OtterGame extends Phaser.Scene {
 
         this.lastMood = state.mood;
 
-        const btnStyle = { fontSize: "18px", backgroundColor: "#eee", color: "#000", padding: 10 };
-
-        const rightX = this.scale.width - 160;
-        this.add.text(rightX, 20, "🍎 Apple", btnStyle).setInteractive().on("pointerdown", () => {
+        const btnStyle = {
+            fontSize: isMobile ? "18px" : "20px",
+            backgroundColor: "#eee",
+            color: "#000",
+            padding: { left: 6, right: 6, top: 10, bottom: 10 },
+            fixedWidth: isMobile ? 160 : 180,
+            fixedHeight: isMobile ? 40 : 45,
+            align: "center"
+        };
+        
+        const buttonX = this.scale.width - (isMobile ? 180 : 200);
+        let buttonY = 20;
+        const buttonGap = isMobile ? 70 : 75;
+        // const rightX = this.scale.width - 160;
+        this.add.text(buttonX, buttonY, "🍎 Apple", btnStyle).setInteractive().on("pointerdown", () => {
             const x = otter.x + Phaser.Math.Between(-50, 50);
             const targetY = otter.y + Phaser.Math.Between(-30, 30);
             const fallingApple = this.add.sprite(x, -50, "apple").setScale(0.15);
@@ -95,13 +106,17 @@ export default class OtterGame extends Phaser.Scene {
                 }
             });
         });
+        buttonY += buttonGap;
 
-        this.add.text(rightX, 60, "🥎 Ball", btnStyle).setInteractive().on("pointerdown", () => {
+
+        this.add.text(buttonX, buttonY, "🥎 Ball", btnStyle).setInteractive().on("pointerdown", () => {
             ball.setVisible(true);
             ball.setPosition(Phaser.Math.Between(100, 700), bounceCenterY);
         });
+        buttonY += buttonGap;
 
-        this.add.text(620, 100, "🧼 Shower", btnStyle).setInteractive().on("pointerdown", () => {
+
+        this.add.text(buttonX, buttonY, "🧼 Shower", btnStyle).setInteractive().on("pointerdown", () => {
             state.mood = "happy";
         
             const sponge = this.add.text(otter.x - 40, otter.y, "🧽", { fontSize: "24px" });
@@ -124,14 +139,13 @@ export default class OtterGame extends Phaser.Scene {
                 }
             });
         });
+        buttonY += buttonGap;
         
-        
-                
-        
-
-        this.add.text(rightX, 140, "💤 Sleep", btnStyle).setInteractive().on("pointerdown", () => {
+        this.add.text(buttonX, buttonY, "💤 Sleep", btnStyle).setInteractive().on("pointerdown", () => {
             state.energy = Math.min(100, state.energy + 40);
         });
+        buttonY += buttonGap;
+
     }
 
     update() {
